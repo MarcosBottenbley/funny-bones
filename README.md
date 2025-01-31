@@ -1,4 +1,4 @@
-# Löve Bone [WIP]
+# Funny Bones
 
 This is a fork of: [Löve Bone](https://github.com/sbseltzer/love-bone). The following is it's description:
 
