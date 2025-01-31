@@ -3,22 +3,22 @@
 	By Samuel Seltzer-Johnston
 --]]
 
-local path = ...;
+local path = ...
 function RequireLibPart(part)
-	return require(path .. "." .. part);
+	return require(path .. "." .. part)
 end
 
-local util = RequireLibPart("util");
-local newBone = RequireLibPart("bone");
-local newSkeleton = RequireLibPart("skeleton");
-local newAnimation = RequireLibPart("animation");
-local newActor = RequireLibPart("actor");
-local newVisual = RequireLibPart("visual");
-local newAttachment = RequireLibPart("attachment");
-local newTransformer = RequireLibPart("transformer");
-local newEventHandler = RequireLibPart("eventhandler");
+local util = RequireLibPart("util")
+local newBone = RequireLibPart("bone")
+local newSkeleton = RequireLibPart("skeleton")
+local newAnimation = RequireLibPart("animation")
+local newActor = RequireLibPart("actor")
+local newVisual = RequireLibPart("visual")
+local newAttachment = RequireLibPart("attachment")
+local newTransformer = RequireLibPart("transformer")
+local newEventHandler = RequireLibPart("eventhandler")
 
-RequireLibPart = nil;
+RequireLibPart = nil
 
 -- Return the library.
 return {
@@ -31,4 +31,4 @@ return {
 	newTransformer = newTransformer,
 	newEventHandler = newEventHandler,
 	isType = util.isType
-};
+}

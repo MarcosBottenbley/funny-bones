@@ -14,5 +14,5 @@ Edit main.lua to swap between which [examples](https://github.com/GeekWithALife/
 
 To use Löve Bone in your own project, just copy the [lovebone](https://github.com/GeekWithALife/boner/tree/master/lovebone) folder.
 ```lua
-local lovebone = require 'lovebone';
+local lovebone = require 'lovebone'
 ```
