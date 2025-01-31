@@ -1,5 +1,7 @@
 # Löve Bone [WIP]
 
+This is a fork of: [Löve Bone](https://github.com/sbseltzer/love-bone). The following is it's description:
+
 An object-oriented 2D Skeletal Animation framework for LÖVE.
 
 Tutorials and documentation can be found in the [Wiki](https://github.com/GeekWithALife/love-bone/wiki).
