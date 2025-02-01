@@ -17,29 +17,25 @@ local print_r = util.print_r
 local SKELETON_ROOT_NAME = util.SKELETON_ROOT_NAME
 
 local MActor = util.Meta.Actor
-MActor.__index = MActor
-local function newActor(skeleton, skinData)
-	local t = setmetatable({}, MActor)
-	
+
+function MActor:initilize(skeleton, skinData)
 	-- Attachments (this includes skin)
-	t.Attachments = {}
+	self.Attachments = {}
 	
 	-- Events
-	t.EventHandler = newEventHandler(t)
+	self.EventHandler = newEventHandler(t)
 	
 	-- Transformer
-	t.Transformer = newTransformer(t)
+	self.Transformer = newTransformer(t)
 	
-	t.Debug = {}
+	self.Debug = {}
 	
-	if (skeleton) then
+	if (skeleton.class == Skeleton) then
 		t:SetSkeleton(skeleton)
 	end
 	if (skinData) then
 		t:SetSkin(skinData)
 	end
-	
-	return t
 end
 
 function MActor:GetTransformer()
