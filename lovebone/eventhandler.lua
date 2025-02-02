@@ -3,16 +3,14 @@
 	Registers and listens for animation events on an actor.
 --]]
 
+local class = require("lib.middleclass")
+local MEventHandler = class("MEventHandler")
 local util = RequireLibPart("util")
 
-local MEventHandler = util.Meta.EventHandler
-MEventHandler.__index = MEventHandler
-local function newEventHandler(actor)
-	local t = setmetatable({}, MEventHandler)
-	t:SetActor(actor)
-	t.Callbacks = {}
-	t.Checked = {}
-	return t
+function MEventHandler:initilize(actor)
+	self:SetActor(actor)
+	self.Callbacks = {}
+	self.Checked = {}
 end
 
 function MEventHandler:SetActor(actor)

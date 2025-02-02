@@ -4,20 +4,18 @@
 	They also come with utility methods for finding keyframe ranges and interpolating between them.
 --]]
 
+local class = require("lib.middleclass")
+local MAnimation = class("MAnimation")
 local util = RequireLibPart("util")
 local lerp = util.lerp
 
-local MAnimation = util.Meta.Animation
-MAnimation.__index = MAnimation
-local function newAnimation(skeleton)
-	local t = setmetatable({}, MAnimation)
-	t.KeyFrames = {}
-	t.Events = {}
-	t.Duration = 0
+function MAnimation:initilize(skeleton)
+	self.KeyFrames = {}
+	self.Events = {}
+	self.Duration = 0
 	if (skeleton) then
-		t:InitializeKeyFrames(skeleton)
+		self:InitializeKeyFrames(skeleton)
 	end
-	return t
 end
 
 -- Initialize the first frame (time=0) to have all bones in their bind-pose.

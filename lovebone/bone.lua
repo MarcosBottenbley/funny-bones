@@ -4,11 +4,11 @@
 	These are at the very bottom of the data structure chain.
 --]]
 
+local class = require("lib.middleclass")
+local MBone = class("MBone")
 local util = RequireLibPart("util")
 
-local MBone = util.Meta.Bone
-MBone.__index = MBone
-local function newBone(parent, layer, offset, defaultRotation, defaultTranslation, defaultScale)
+function MBone:initilize(parent, layer, offset, defaultRotation, defaultTranslation, defaultScale)
 	layer = layer or 0
 	
 	offset = offset or {0, 0}
@@ -25,14 +25,12 @@ local function newBone(parent, layer, offset, defaultRotation, defaultTranslatio
 	defaultScale[1] = tonumber(defaultScale[1]) or 1
 	defaultScale[2] = tonumber(defaultScale[2]) or 1
 	
-	local bone = setmetatable({}, MBone)
-	bone:SetParent(parent)
-	bone:SetLayer(layer)
-	bone:SetOffset(unpack(offset))
-	bone:SetDefaultRotation(defaultRotation)
-	bone:SetDefaultTranslation(unpack(defaultTranslation))
-	bone:SetDefaultScale(unpack(defaultScale))
-	return bone
+	self:SetParent(parent)
+	self:SetLayer(layer)
+	self:SetOffset(unpack(offset))
+	self:SetDefaultRotation(defaultRotation)
+	self:SetDefaultTranslation(unpack(defaultTranslation))
+	self:SetDefaultScale(unpack(defaultScale))
 end
 
 -- Represents draw order for bones in the same skeleton

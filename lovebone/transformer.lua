@@ -5,94 +5,98 @@
 	The transformer is also used as an interface to the bone orientations of an actor.
 --]]
 
+local class = require("lib.middleclass")
+local MTransformer = class("MTransformer")
 local util = RequireLibPart("util")
 local SKELETON_ROOT_NAME = util.SKELETON_ROOT_NAME
 local rotate = util.rotate
 local lerp = util.lerp
 
--- Helper methods for transformation tables.
-local function newTransformation(rotation, translateX, translateY, scaleX, scaleY, layer, visual, vFlip, hFlip)
-	rotation = tonumber(rotation) or 0
-	translateX = tonumber(translateX) or 0
-	translateY = tonumber(translateY) or 0
-	scaleX = tonumber(scaleX) or 1
-	scaleY = tonumber(scaleY) or 1
-	return {rotation = rotation, translation = {translateX, translateY}, scale = {scaleX, scaleY}, layer = layer, visual = visual, vFlip = vFlip, hFlip = hFlip}
-end
-local function isValidTransformation(t)
-	local valid = type(t) == "table"
-	if (valid) then
-		if (t.rotation) then
-			valid = valid and tonumber(t.rotation)
-		end
-		if (t.translation) then
-			valid = valid and type(t.translation) == "table" and tonumber(t.translation[1]) and tonumber(t.translation[2])
-		end
-		if (t.scale) then
-			valid = valid and type(t.scale) == "table" and tonumber(t.scale[1]) and tonumber(t.scale[2])
-		end
-		if (t.layer) then
-			valid = valid and tonumber(t.layer)
-		end
-		if (t.visual) then
-			valid = valid and util.isType(t.visual, "Visual")
-		end
-	end
-	-- We don't need to check vFlip and hFlip as they are booleans.
-	return valid
-end
-local function isValidTransformationObject(obj)
-	if (type(obj) == "table") then
-		if (not util.isType(obj, "Animation")) then
-			for boneName, trans in pairs(obj) do
-				if (not isValidTransformation(trans)) then
-					return false
-				end
-			end
-		end
-	elseif (not type(obj) == "function") then
-		return false
-	end
-	return true
+function MTransformer:initilize(actor)
+	self.TransformLocal = {}
+	self.TransformWorld = {}
+	
+	self.Transformations = {}
+	self.Powers = {}
+	self.BoneMasks = {}
+	self.Priorities = {}
+	self.Variables = {}
+	
+	self.FlipH = false
+	self.FlipV = false
+	
+	self.RootTransformation = newTransformation()
+	
+	self:SetActor(actor)
 end
 
--- Transformer Meta
-local MTransformer = util.Meta.Transformer
-MTransformer.__index = MTransformer
--- Constructor
-local function newTransformer(actor)
-	local t = setmetatable({}, MTransformer)
-	
-	t.TransformLocal = {}
-	t.TransformWorld = {}
-	
-	t.Transformations = {}
-	t.Powers = {}
-	t.BoneMasks = {}
-	t.Priorities = {}
-	t.Variables = {}
-	
-	t.FlipH = false
-	t.FlipV = false
-	
-	t.RootTransformation = newTransformation()
-	
-	t:SetActor(actor)
-	
-	return t
+-- Getters for absolute orientations (attachName is optional in all cases)
+function MTransformer:GetAngle(boneName, attachName)
+	boneName = boneName or SKELETON_ROOT_NAME
+	local boneData = self.TransformWorld[boneName]
+	local attach = self:GetActor():GetAttachment(boneName, attachName)
+	local rotation = 0
+	if (boneData and boneData.rotation) then
+		rotation = rotation + boneData.rotation
+	end
+	if (attach) then
+		rotation = rotation + attach:GetRotation()
+	end
+	return rotation
 end
 
--- Actor accessors
-function MTransformer:SetActor(actor)
-	if (not actor or type(actor) ~= "table") then
-		error(util.errorArgs("BadArg", 1, "SetActor", "table", type(actor)))
-	elseif (not util.isType(actor, "Actor")) then
-		error(util.errorArgs("BadMeta", 1, "SetActor", "Actor", tostring(util.Meta.Actor), tostring(getmetatable(actor))))
+function MTransformer:GetPosition(boneName, attachName)
+	boneName = boneName or SKELETON_ROOT_NAME
+	local boneData = self.TransformWorld[boneName]
+	local attach = self:GetActor():GetAttachment(boneName, attachName)
+	local x, y = 0, 0
+	if (boneData and boneData.translation) then
+		x = x + boneData.translation[1]
+		y = y + boneData.translation[2]
 	end
-	self.Actor = actor
+	if (attach) then
+		local ax, ay = attach:GetTranslation()
+		x = x + ax
+		y = y + ay
+	end
+	return x, y
 end
-function MTransformer:GetActor()
-	return self.Actor
+
+function MTransformer:GetScale(boneName, attachName)
+	boneName = boneName or SKELETON_ROOT_NAME
+	local boneData = self.TransformWorld[boneName]
+	local attach = self:GetActor():GetAttachment(boneName, attachName)
+	local x, y = 1, 1
+	if (boneData and boneData.scale) then
+		x = x * boneData.scale[1]
+		y = y * boneData.scale[2]
+	end
+	if (attach) then
+		local ax, ay = attach:GetScale()
+		x = x * ax
+		y = y * ay
+	end
+	return x, y
+end
+
+function MTransformer:GetForward(boneName, attachName)
+	boneName = boneName or SKELETON_ROOT_NAME
+	local ang = self:GetAngle(boneName, attachName)
+	local fx, fy = rotate(0, 0, ang, 1, 0)
+	if (self.FlipH and not self.FlipV or self.FlipV and not self.FlipH) then
+		fx = -fx
+	end
+	return fx, fy
+end
+
+function MTransformer:GetUp(boneName, attachName)
+	boneName = boneName or SKELETON_ROOT_NAME
+	local uy, ux = self:GetForward(boneName, attachName)
+	return ux, -uy
+end
+
+function MTransformer:GetTransform(name)
+	return self.Transformations[name]
 end
 
 -- TODO: Add dummyproofing
@@ -136,9 +140,6 @@ function MTransformer:SetTransform(name, transformation, boneMask)
 		return vars
 	end
 end
-function MTransformer:GetTransform(name)
-	return self.Transformations[name]
-end
 
 -- This might be useful for mass-animation updating. Still needs work.
 function MTransformer:GetIterator(typeName)
@@ -151,12 +152,33 @@ function MTransformer:GetIterator(typeName)
 	return pairs(t)
 end
 
+
+-- Actor accessors
+function MTransformer:SetActor(actor)
+	if (not actor or type(actor) ~= "table") then
+		error(util.errorArgs("BadArg", 1, "SetActor", "table", type(actor)))
+	elseif (not util.isType(actor, "Actor")) then
+		error(util.errorArgs("BadMeta", 1, "SetActor", "Actor", tostring(util.Meta.Actor), tostring(getmetatable(actor))))
+	end
+	self.Actor = actor
+end
+function MTransformer:GetActor()
+	return self.Actor
+end
+
 -- Utility function. Takes an angle that assumes an unflipped actor, and converts it to account for flipping.
 function MTransformer:GetFlippedAngle(angle)
 	angle = angle + self:GetAngle()
 	local sx, sy = self:GetScale()
 	angle = angle * (sy/math.abs(sy))
 	return angle
+end
+
+function MTransformer:GetPriority(name, boneName)
+	if (self.Priorities[boneName] == nil) then
+		return -1
+	end
+	return self.Priorities[boneName][name]
 end
 
 function MTransformer:SetPriority(name, priority, bones)
@@ -169,23 +191,6 @@ function MTransformer:SetPriority(name, priority, bones)
 		self.Priorities[boneName] = self.Priorities[boneName] or {}
 		self.Priorities[boneName][name] = priority
 	end
-end
-function MTransformer:GetPriority(name, boneName)
-	if (self.Priorities[boneName] == nil) then
-		return -1
-	end
-	return self.Priorities[boneName][name]
-end
-
-function MTransformer:SetPower(name, power)
-	power = math.max(0, math.min(power, 1)) -- clamp to [0,1]
-	self.Powers[name] = power
-end
-function MTransformer:GetPower(name)
-	if (self.Powers[name] == nil) then
-		return -1
-	end
-	return self.Powers[name]
 end
 
 function MTransformer:GetVariables(name)
@@ -205,6 +210,18 @@ function MTransformer:GetActiveTransformations()
 		end
 	end
 	return transformations
+end
+
+function MTransformer:GetPower(name)
+	if (self.Powers[name] == nil) then
+		return -1
+	end
+	return self.Powers[name]
+end
+
+function MTransformer:SetPower(name, power)
+	power = math.max(0, math.min(power, 1)) -- clamp to [0,1]
+	self.Powers[name] = power
 end
 
 -- TODO: This could probably be optimized/refactored.
@@ -392,67 +409,6 @@ function MTransformer:CalculateWorld(boneName, parentData)
 			self:CalculateWorld(children[i], boneData)
 		end
 	end
-end
-
--- Getters for absolute orientations (attachName is optional in all cases)
-function MTransformer:GetAngle(boneName, attachName)
-	boneName = boneName or SKELETON_ROOT_NAME
-	local boneData = self.TransformWorld[boneName]
-	local attach = self:GetActor():GetAttachment(boneName, attachName)
-	local rotation = 0
-	if (boneData and boneData.rotation) then
-		rotation = rotation + boneData.rotation
-	end
-	if (attach) then
-		rotation = rotation + attach:GetRotation()
-	end
-	return rotation
-end
-function MTransformer:GetPosition(boneName, attachName)
-	boneName = boneName or SKELETON_ROOT_NAME
-	local boneData = self.TransformWorld[boneName]
-	local attach = self:GetActor():GetAttachment(boneName, attachName)
-	local x, y = 0, 0
-	if (boneData and boneData.translation) then
-		x = x + boneData.translation[1]
-		y = y + boneData.translation[2]
-	end
-	if (attach) then
-		local ax, ay = attach:GetTranslation()
-		x = x + ax
-		y = y + ay
-	end
-	return x, y
-end
-function MTransformer:GetScale(boneName, attachName)
-	boneName = boneName or SKELETON_ROOT_NAME
-	local boneData = self.TransformWorld[boneName]
-	local attach = self:GetActor():GetAttachment(boneName, attachName)
-	local x, y = 1, 1
-	if (boneData and boneData.scale) then
-		x = x * boneData.scale[1]
-		y = y * boneData.scale[2]
-	end
-	if (attach) then
-		local ax, ay = attach:GetScale()
-		x = x * ax
-		y = y * ay
-	end
-	return x, y
-end
-function MTransformer:GetForward(boneName, attachName)
-	boneName = boneName or SKELETON_ROOT_NAME
-	local ang = self:GetAngle(boneName, attachName)
-	local fx, fy = rotate(0, 0, ang, 1, 0)
-	if (self.FlipH and not self.FlipV or self.FlipV and not self.FlipH) then
-		fx = -fx
-	end
-	return fx, fy
-end
-function MTransformer:GetUp(boneName, attachName)
-	boneName = boneName or SKELETON_ROOT_NAME
-	local uy, ux = self:GetForward(boneName, attachName)
-	return ux, -uy
 end
 
 return newTransformer

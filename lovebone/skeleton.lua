@@ -3,21 +3,18 @@
 	A simple containment data structure for bones, animations, and skins.
 	Actors hold a reference to a skeleton, which defines what animations and skins it can use.
 --]]
-
+local class = require("lib.middleclass")
+local MSkeleton = class("MSkeleton")
 local util = RequireLibPart("util")
 local newBone = RequireLibPart("bone")
 local SKELETON_ROOT_NAME = util.SKELETON_ROOT_NAME
 
-local MSkeleton = util.Meta.Skeleton
-MSkeleton.__index = MSkeleton
-local function newSkeleton()
-	local skeleton = setmetatable({}, MSkeleton)
-	skeleton.BoneNames = {}
-	skeleton.Bones = {}
-	skeleton.Bones[SKELETON_ROOT_NAME] = newBone()
-	skeleton.RenderOrder = {}
-	skeleton.Valid = true
-	return skeleton
+function MSkeleton:initilize()
+	self.BoneNames = {}
+	self.Bones = {}
+	self.Bones[SKELETON_ROOT_NAME] = newBone()
+	self.RenderOrder = {}
+	self.Valid = true
 end
 
 function MSkeleton:IsValid()

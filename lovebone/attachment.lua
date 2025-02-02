@@ -3,22 +3,20 @@
 	An oriented visual representation of a bone on an actor.
 --]]
 
+local class = require("lib.middleclass")
+local MAttachment = class("MAttachment")
 local util = RequireLibPart("util")
 
-local MAttachment = util.Meta.Attachment
-MAttachment.__index = MAttachment
-local function newAttachment(visual)
-	local t = setmetatable({}, MAttachment)
+function MAttachment:newAttachment(visual)
 	if (visual) then
-		t:SetVisual(visual)
+		self:SetVisual(visual)
 	end
 	--t.Origin = {0,0}
-	t:SetRotation(0)
-	t:SetTranslation(0, 0)
-	t:SetScale(1, 1)
-	t:SetLayerOffset(0)
-	t:SetColor(255, 255, 255, 255)
-	return t
+	self:SetRotation(0)
+	self:SetTranslation(0, 0)
+	self:SetScale(1, 1)
+	self:SetLayerOffset(0)
+	self:SetColor(255, 255, 255, 255)
 end
 
 function MAttachment:SetVisual(vis)

@@ -4,6 +4,8 @@
 	Each actor has a reference to a skeleton, its own transformer/eventhandler, and a list of attachments.
 --]]
 
+local class = require("lib.middleclass")
+local MActor = class("MActor")
 local util = RequireLibPart("util")
 local newVisual = RequireLibPart("visual")
 local newAttachment = RequireLibPart("attachment")
@@ -15,8 +17,6 @@ local lerp = util.lerp
 local print_r = util.print_r
 
 local SKELETON_ROOT_NAME = util.SKELETON_ROOT_NAME
-
-local MActor = util.Meta.Actor
 
 function MActor:initilize(skeleton, skinData)
 	-- Attachments (this includes skin)
@@ -31,10 +31,10 @@ function MActor:initilize(skeleton, skinData)
 	self.Debug = {}
 	
 	if (skeleton.class == Skeleton) then
-		t:SetSkeleton(skeleton)
+		self:SetSkeleton(skeleton)
 	end
 	if (skinData) then
-		t:SetSkin(skinData)
+		self:SetSkin(skinData)
 	end
 end
 
